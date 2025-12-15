@@ -59,7 +59,7 @@ Config file location: `BepInEx/config/com.blackhorse311.forcibleentry.cfg`
 
 ## Source Code
 
-Source code is available at: [GitHub Repository URL]
+Source code is available at: https://github.com/Blackhorse311/Blackhorse311-ForcibleEntry
 
 ## License
 
