@@ -1,0 +1,36 @@
+# Build outputs
+bin/
+obj/
+
+# IDE folders
+.vs/
+.vscode/
+.idea/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Research folder (not part of the mod)
+research/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Forge guideline documents (local reference only)
+Current Forge Content Guidelines.txt
+Current Forge Community Standards.txt
+Mod Creation Rules For Claude on ForcibleEntry Mod.txt
