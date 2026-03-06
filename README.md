@@ -146,6 +146,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
 ### Recent
 
+- **v1.0.3** - Removed unused server mod (was causing icon warnings on server start)
 - **v1.0.2** - Edge case fixes, hardened breach logic, raid cleanup
 - **v1.0.1** - SPT 4.0.13 compatibility fix
 - **v1.0.0** - Initial release

@@ -18,7 +18,7 @@
     <PackageReference Include="SPTarkov.Reflection" Version="4.0.13" />
   </ItemGroup>
 
-  <!-- Copy output to SPT user/mods folder -->
+  <!-- Copy output to SPT user/mods folder (disabled - server mod not currently in use)
   <Target Name="CopyToMods" AfterTargets="Build">
     <PropertyGroup>
       <ModOutputDir>H:\SPT\SPT\user\mods\Blackhorse311-ForcibleEntry</ModOutputDir>
@@ -27,4 +27,5 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />
     <Message Text="Copied $(TargetFileName) to $(ModOutputDir)" Importance="High" />
   </Target>
+  -->
 </Project>
