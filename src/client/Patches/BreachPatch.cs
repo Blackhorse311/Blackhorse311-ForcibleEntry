@@ -1,13 +1,15 @@
 using System;
 using HarmonyLib;
 using UnityEngine;
+using EFT;
 using EFT.Interactive;
 
 namespace Blackhorse311.ForcibleEntry.Patches
 {
     /// <summary>
     /// Patch Door.BreachSuccessRoll to track breach attempts and force success after threshold.
-    /// This allows players to force open any locked door by breaching it multiple times.
+    /// For locked doors, we always control the result (threshold is the gate, not RNG).
+    /// For normal doors, vanilla breach logic runs unmodified.
     /// </summary>
     [HarmonyPatch(typeof(Door), nameof(Door.BreachSuccessRoll), typeof(Vector3))]
     public static class BreachSuccessPatch
@@ -17,17 +19,16 @@ namespace Blackhorse311.ForcibleEntry.Patches
         {
             try
             {
-                string doorId = __instance.Id;
+                // Only intercept locked doors - vanilla handles normal breaches
+                if (__instance.DoorState != EDoorState.Locked)
+                    return true;
 
+                string doorId = __instance.Id;
                 bool shouldUnlock = BreachTracker.RecordBreach(doorId);
 
-                if (shouldUnlock)
-                {
-                    __result = true;
-                    return false;
-                }
-
-                return true;
+                // Always control the result for locked doors - threshold is the gate
+                __result = shouldUnlock;
+                return false;
             }
             catch (Exception ex)
             {
@@ -38,18 +39,19 @@ namespace Blackhorse311.ForcibleEntry.Patches
     }
 
     /// <summary>
-    /// Patch GetInteractionParameters to enable breach on locked doors.
-    /// CanBeBreached is now a public field (not a property), so we set it
-    /// before interaction parameters are calculated.
+    /// Temporarily enable breach on locked doors for the duration of GetInteractionParameters.
+    /// CanBeBreached is a public field - we set it in the prefix and restore in the postfix
+    /// so we don't permanently mutate door state.
     /// </summary>
     [HarmonyPatch(typeof(Door), nameof(Door.GetInteractionParameters), typeof(Vector3))]
     public static class CanBeBreachedPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(Door __instance)
+        public static void Prefix(Door __instance, ref bool __state)
         {
             try
             {
+                __state = __instance.CanBeBreached;
                 if (__instance.DoorState == EDoorState.Locked)
                 {
                     __instance.CanBeBreached = true;
@@ -57,14 +59,26 @@ namespace Blackhorse311.ForcibleEntry.Patches
             }
             catch (Exception ex)
             {
-                Plugin.Log?.LogError($"Error in CanBeBreachedPatch: {ex}");
+                Plugin.Log?.LogError($"Error in CanBeBreachedPatch prefix: {ex}");
+            }
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(Door __instance, bool __state)
+        {
+            try
+            {
+                __instance.CanBeBreached = __state;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogError($"Error in CanBeBreachedPatch postfix: {ex}");
             }
         }
     }
 
     /// <summary>
-    /// Patch to handle the actual door unlock after successful breach on locked door.
-    /// When a locked door is breached successfully, it should unlock and open.
+    /// Unlock locked doors before KickOpen runs so the kick animation completes.
     /// </summary>
     [HarmonyPatch(typeof(Door), nameof(Door.KickOpen), typeof(Vector3), typeof(bool))]
     public static class KickOpenPatch
@@ -84,6 +98,21 @@ namespace Blackhorse311.ForcibleEntry.Patches
             {
                 Plugin.Log?.LogError($"Error in KickOpenPatch: {ex}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Clear breach tracking data at the start of each raid to prevent
+    /// stale state from carrying over between raids.
+    /// </summary>
+    [HarmonyPatch(typeof(GameWorld), nameof(GameWorld.OnGameStarted))]
+    public static class RaidCleanupPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            BreachTracker.Clear();
+            Plugin.Log?.LogDebug("[ForcibleEntry] Breach tracker cleared for new raid.");
         }
     }
 }

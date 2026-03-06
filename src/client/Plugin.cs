@@ -65,7 +65,7 @@ namespace Blackhorse311.ForcibleEntry
             }
             catch (Exception ex)
             {
-                Log.LogWarning($"Failed to unpatch: {ex}");
+                Log?.LogWarning($"Failed to unpatch: {ex}");
             }
         }
     }
@@ -74,6 +74,6 @@ namespace Blackhorse311.ForcibleEntry
     {
         public const string PLUGIN_GUID = "com.blackhorse311.forcibleentry";
         public const string PLUGIN_NAME = "Blackhorse311-ForcibleEntry";
-        public const string PLUGIN_VERSION = "1.0.1";
+        public const string PLUGIN_VERSION = "1.0.2";
     }
 }

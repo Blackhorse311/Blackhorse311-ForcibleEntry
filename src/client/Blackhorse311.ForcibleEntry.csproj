@@ -9,7 +9,7 @@
     <!--
       Mod identification and versioning
     -->
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>Blackhorse311</Authors>
     <Company>Blackhorse311</Company>
     <Product>Forcible Entry</Product>
@@ -19,7 +19,7 @@
       Build configuration
     -->
     <LangVersion>latest</LangVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <RootNamespace>Blackhorse311.ForcibleEntry</RootNamespace>
     <AssemblyName>Blackhorse311.ForcibleEntry</AssemblyName>
 
