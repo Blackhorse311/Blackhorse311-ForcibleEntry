@@ -42,18 +42,53 @@ namespace Blackhorse311.ForcibleEntry
                 )
             );
 
-            try
-            {
-                _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
-                _harmony.PatchAll(Assembly.GetExecutingAssembly());
+            // Apply each patch class individually rather than PatchAll(), which is all-or-nothing:
+            // if one [HarmonyPatch] can't bind its obfuscated EFT target after a game/SPT update,
+            // PatchAll throws and none of the patches apply, yet the plugin still reports loaded.
+            // Per-class application lets us log exactly which patch broke and fail loudly.
+            _harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+            int applied = ApplyPatches(
+                typeof(Patches.BreachSuccessPatch),
+                typeof(Patches.CanBeBreachedPatch),
+                typeof(Patches.KickOpenPatch),
+                typeof(Patches.RaidCleanupPatch));
 
-                Log.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded.");
+            if (applied == 0)
+            {
+                Log.LogError(
+                    $"{PluginInfo.PLUGIN_NAME} DISABLED — no patches could be applied. This usually means " +
+                    $"an SPT/EFT version change renamed the Door/GameWorld members this mod hooks. " +
+                    $"Check for a {PluginInfo.PLUGIN_NAME} update for your SPT version.");
+            }
+            else
+            {
+                Log.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded ({applied} patches applied).");
                 Log.LogInfo($"Breach {BreachesToUnlock.Value} times to force open any locked door!");
             }
-            catch (Exception ex)
+        }
+
+        /// <summary>
+        /// Applies each patch class on its own so one failed bind (e.g. an obfuscated member
+        /// renamed by a game update) is logged by name instead of silently aborting the rest.
+        /// </summary>
+        /// <returns>The number of patch classes that applied successfully.</returns>
+        private int ApplyPatches(params Type[] patchClasses)
+        {
+            int applied = 0;
+            foreach (var patchClass in patchClasses)
             {
-                Log.LogError($"Failed to initialize patches: {ex}");
+                try
+                {
+                    _harmony.CreateClassProcessor(patchClass).Patch();
+                    applied++;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogError(
+                        $"Failed to apply patch {patchClass.Name} (likely an SPT/EFT version change): {ex.Message}");
+                }
             }
+            return applied;
         }
 
         private void OnDestroy()
@@ -74,6 +109,7 @@ namespace Blackhorse311.ForcibleEntry
     {
         public const string PLUGIN_GUID = "com.blackhorse311.forcibleentry";
         public const string PLUGIN_NAME = "Blackhorse311-ForcibleEntry";
+        // Keep in sync with <Version> in Blackhorse311.ForcibleEntry.csproj
         public const string PLUGIN_VERSION = "1.0.3";
     }
 }
