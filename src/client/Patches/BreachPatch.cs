@@ -49,9 +49,9 @@ namespace Blackhorse311.ForcibleEntry.Patches
         [HarmonyPrefix]
         public static void Prefix(Door __instance, ref bool __state)
         {
+            __state = __instance.CanBeBreached;
             try
             {
-                __state = __instance.CanBeBreached;
                 if (__instance.DoorState == EDoorState.Locked)
                 {
                     __instance.CanBeBreached = true;
@@ -59,6 +59,7 @@ namespace Blackhorse311.ForcibleEntry.Patches
             }
             catch (Exception ex)
             {
+                __instance.CanBeBreached = __state;
                 Plugin.Log?.LogError($"Error in CanBeBreachedPatch prefix: {ex}");
             }
         }
@@ -79,6 +80,9 @@ namespace Blackhorse311.ForcibleEntry.Patches
 
     /// <summary>
     /// Unlock locked doors before KickOpen runs so the kick animation completes.
+    /// Only unlocks doors that BreachTracker has authorized (threshold reached); a locked door
+    /// that was never breached to threshold is left locked, so KickOpen can never "free unlock"
+    /// a door reached through any path other than a successful gated breach roll.
     /// </summary>
     [HarmonyPatch(typeof(Door), nameof(Door.KickOpen), typeof(Vector3), typeof(bool))]
     public static class KickOpenPatch
@@ -88,7 +92,8 @@ namespace Blackhorse311.ForcibleEntry.Patches
         {
             try
             {
-                if (__instance.DoorState == EDoorState.Locked)
+                if (__instance.DoorState == EDoorState.Locked
+                    && BreachTracker.ConsumeUnlockAuthorization(__instance.Id))
                 {
                     Plugin.Log?.LogDebug($"[ForcibleEntry] Unlocking door {__instance.Id} after forced breach!");
                     __instance.DoorState = EDoorState.Shut;
