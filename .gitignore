@@ -34,3 +34,10 @@ desktop.ini
 Current Forge Content Guidelines.txt
 Current Forge Community Standards.txt
 Mod Creation Rules For Claude on ForcibleEntry Mod.txt
+
+# Release archives (built artifacts)
+release/
+
+# Claude Code (local dev tools)
+.claude/
+CODE_REVIEW_*.md

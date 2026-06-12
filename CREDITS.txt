@@ -1,0 +1,28 @@
+===============================================================================
+FORCIBLE ENTRY MOD - CREDITS
+===============================================================================
+
+DEVELOPER
+---------
+Blackhorse311
+
+3D MODELS & ICONS
+-----------------
+The item icons in this mod were created from royalty-free 3D models:
+
+Halligan Bar
+  Source: CGTrader
+  URL: https://www.cgtrader.com/3d-models/industrial/tool/halligan-bar
+  License: Royalty Free
+
+Flat-Head Fire Axe
+  Source: CGTrader
+  URL: https://www.cgtrader.com/3d-models/industrial/tool/fire-axe-233fc15b-d6d5-4e57-aa61-6eec4923cc08
+  License: Royalty Free
+
+SPECIAL THANKS
+--------------
+- SPT Development Team for creating and maintaining Single Player Tarkov
+- The SPT modding community for documentation and examples
+
+===============================================================================
