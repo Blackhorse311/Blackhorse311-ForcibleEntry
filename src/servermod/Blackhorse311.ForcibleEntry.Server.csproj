@@ -19,9 +19,10 @@
   </ItemGroup>
 
   <!-- Copy output to SPT user/mods folder (disabled - server mod not currently in use)
-  <Target Name="CopyToMods" AfterTargets="Build">
+  <Target Name="CopyToMods" AfterTargets="Build"
+          Condition="'$(SptPath)' != '' AND '$(NoDeploy)' != 'true'">
     <PropertyGroup>
-      <ModOutputDir>H:\SPT\SPT\user\mods\Blackhorse311-ForcibleEntry</ModOutputDir>
+      <ModOutputDir>$(SptPath)\SPT\user\mods\Blackhorse311-ForcibleEntry</ModOutputDir>
     </PropertyGroup>
     <MakeDir Directories="$(ModOutputDir)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />

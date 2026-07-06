@@ -40,12 +40,12 @@
       BepInEx Core References
     -->
     <Reference Include="BepInEx">
-      <HintPath>H:\SPT\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\core\BepInEx.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="0Harmony">
-      <HintPath>H:\SPT\BepInEx\core\0Harmony.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\core\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
@@ -53,12 +53,12 @@
       SPT References
     -->
     <Reference Include="spt-reflection">
-      <HintPath>H:\SPT\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="spt-common">
-      <HintPath>H:\SPT\BepInEx\plugins\spt\spt-common.dll</HintPath>
+      <HintPath>$(SptPath)\BepInEx\plugins\spt\spt-common.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
@@ -66,17 +66,17 @@
       EFT Game References
     -->
     <Reference Include="Assembly-CSharp">
-      <HintPath>H:\SPT\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="Comfort">
-      <HintPath>H:\SPT\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="Comfort.Unity">
-      <HintPath>H:\SPT\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\Comfort.Unity.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
@@ -84,22 +84,35 @@
       Unity Engine References
     -->
     <Reference Include="UnityEngine">
-      <HintPath>H:\SPT\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>H:\SPT\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(SptPath)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
 
   </ItemGroup>
 
   <!--
-    Post-build event to copy DLL to SPT BepInEx plugins folder
+    Game-assembly references are resolved from $(SptPath) (see Directory.Build.props).
+    Fail fast with a clear message instead of a wall of missing-reference errors.
   -->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y /I &quot;$(TargetPath)&quot; &quot;H:\SPT\BepInEx\plugins\Blackhorse311-ForcibleEntry\&quot;" />
+  <Target Name="EnsureSptPath" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(SptPath)' == ''"
+           Text="SptPath is not set; BepInEx/EFT assembly references cannot be resolved. Pass -p:SptPath=&quot;&lt;your SPT folder&gt;&quot; to the build, or set the SPT_PATH environment variable to your SPT install folder." />
+  </Target>
+
+  <!--
+    Deploy the built plugin DLL into the SPT install identified by $(SptPath).
+    Skipped when SptPath is unset or when building with -p:NoDeploy=true.
+  -->
+  <Target Name="DeployToSpt" AfterTargets="Build"
+          Condition="'$(SptPath)' != '' AND '$(NoDeploy)' != 'true'">
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFolder="$(SptPath)\BepInEx\plugins\Blackhorse311-ForcibleEntry\" />
+    <Message Text="Deployed $(TargetFileName) to $(SptPath)\BepInEx\plugins\Blackhorse311-ForcibleEntry\" Importance="High" />
   </Target>
 
 </Project>

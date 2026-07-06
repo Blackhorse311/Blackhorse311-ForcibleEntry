@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    SPT installation path resolution (single source of truth for all projects).
+    Precedence: -p:SptPath=<path> on the command line, then the SPT_PATH
+    environment variable. There is intentionally NO hardcoded default so a
+    plain build can never touch a live game install.
+  -->
+  <PropertyGroup>
+    <SptPath Condition="'$(SptPath)' == ''">$(SPT_PATH)</SptPath>
+  </PropertyGroup>
+
+</Project>
