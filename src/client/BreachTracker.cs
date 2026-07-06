@@ -63,26 +63,6 @@ namespace Blackhorse311.ForcibleEntry
         }
 
         /// <summary>
-        /// Get the current breach count for a door
-        /// </summary>
-        public static int GetBreachCount(string doorId)
-        {
-            if (string.IsNullOrEmpty(doorId))
-                return 0;
-
-            if (_doorBreaches.TryGetValue(doorId, out var data))
-            {
-                var timeout = TimeSpan.FromSeconds(Plugin.BreachTimeout.Value);
-                if (DateTime.UtcNow - data.LastBreachTime <= timeout)
-                {
-                    return data.Count;
-                }
-                _doorBreaches.Remove(doorId);
-            }
-            return 0;
-        }
-
-        /// <summary>
         /// Returns true exactly once if this door reached its breach threshold and is cleared to
         /// unlock, consuming the authorization so a single kick can only ever open one door once.
         /// KickOpenPatch gates its unlock on this rather than re-deriving intent from DoorState.
@@ -102,18 +82,6 @@ namespace Blackhorse311.ForcibleEntry
         {
             _doorBreaches.Clear();
             _authorizedDoors.Clear();
-        }
-
-        /// <summary>
-        /// Reset breach count for a specific door
-        /// </summary>
-        public static void ResetDoor(string doorId)
-        {
-            if (!string.IsNullOrEmpty(doorId))
-            {
-                _doorBreaches.Remove(doorId);
-                _authorizedDoors.Remove(doorId);
-            }
         }
     }
 }
