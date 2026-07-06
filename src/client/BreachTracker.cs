@@ -17,37 +17,58 @@ namespace Blackhorse311.ForcibleEntry
         // KickOpen must not unlock a door that was never authorized here.
         private static readonly HashSet<string> _authorizedDoors = new HashSet<string>();
 
+        // No seeding needed: each door's roll is made once and stored, so the sequence
+        // doesn't have to be reproducible.
+        private static readonly Random _random = new Random();
+
         private class BreachData
         {
             public int Count { get; set; }
             public DateTime LastBreachTime { get; set; }
+            public int RolledThreshold { get; set; }
         }
 
         /// <summary>
         /// Record a breach attempt on a door and check if it should unlock
         /// </summary>
         /// <param name="doorId">The unique ID of the door</param>
+        /// <param name="category">Breach-difficulty category resolved from the door's material</param>
+        /// <param name="materialName">Raw material name, used only for the first-kick debug log</param>
         /// <returns>True if the door should be unlocked (threshold reached)</returns>
-        public static bool RecordBreach(string doorId)
+        public static bool RecordBreach(string doorId, DoorMaterialCategory category, string materialName)
         {
             if (string.IsNullOrEmpty(doorId))
                 return false;
 
             var now = DateTime.UtcNow;
             var timeout = TimeSpan.FromSeconds(Plugin.BreachTimeout.Value);
-            var threshold = Plugin.BreachesToUnlock.Value;
 
-            // Treat an unseen door, or one whose breach window has expired, as a fresh sequence.
-            // Both cases then run the same increment-and-test below, so the threshold is checked
-            // on every breach including the first (otherwise threshold == 1 would need two kicks).
-            if (!_doorBreaches.TryGetValue(doorId, out var data) || now - data.LastBreachTime > timeout)
+            if (!_doorBreaches.TryGetValue(doorId, out var data))
             {
-                data = new BreachData { Count = 0, LastBreachTime = now };
+                // First kick on this door this raid: roll its threshold once and store it.
+                // Every later kick reuses the stored roll — no re-rolling, so the door can't
+                // get easier or harder mid-sequence.
+                data = new BreachData { Count = 0, LastBreachTime = now, RolledThreshold = RollThreshold(category) };
                 _doorBreaches[doorId] = data;
+                if (Plugin.RandomizeBreaches.Value)
+                {
+                    Plugin.Log?.LogDebug(
+                        $"[ForcibleEntry] Door {doorId} rolled threshold {data.RolledThreshold} (material {materialName}, category {category})");
+                }
+            }
+            else if (now - data.LastBreachTime > timeout)
+            {
+                // Breach window expired: the kick sequence restarts, but the rolled threshold is
+                // kept — the door didn't change material because the player took a break.
+                data.Count = 0;
             }
 
             data.Count++;
             data.LastBreachTime = now;
+
+            // When randomization is off, this is exactly the pre-1.1.0 behavior: the fixed
+            // BreachesToUnlock value, read live so mid-raid config changes still apply.
+            var threshold = Plugin.RandomizeBreaches.Value ? data.RolledThreshold : Plugin.BreachesToUnlock.Value;
             Plugin.Log?.LogDebug($"[ForcibleEntry] Breach {data.Count}/{threshold} on door {doorId}");
 
             if (data.Count >= threshold)
@@ -60,6 +81,38 @@ namespace Blackhorse311.ForcibleEntry
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Rolls a breach threshold from the configured min/max range for the given category.
+        /// Inverted user config (min > max) is swapped rather than thrown on, so a bad edit
+        /// in the cfg file can't take the feature down mid-raid.
+        /// </summary>
+        private static int RollThreshold(DoorMaterialCategory category)
+        {
+            int min, max;
+            switch (category)
+            {
+                case DoorMaterialCategory.Flimsy:
+                    min = Plugin.FlimsyBreachesMin.Value;
+                    max = Plugin.FlimsyBreachesMax.Value;
+                    break;
+                case DoorMaterialCategory.Reinforced:
+                    min = Plugin.ReinforcedBreachesMin.Value;
+                    max = Plugin.ReinforcedBreachesMax.Value;
+                    break;
+                default:
+                    min = Plugin.SturdyBreachesMin.Value;
+                    max = Plugin.SturdyBreachesMax.Value;
+                    break;
+            }
+
+            if (max < min)
+            {
+                (min, max) = (max, min);
+            }
+
+            return _random.Next(min, max + 1);
         }
 
         /// <summary>

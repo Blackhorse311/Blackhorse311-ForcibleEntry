@@ -24,7 +24,13 @@ namespace Blackhorse311.ForcibleEntry.Patches
                     return true;
 
                 string doorId = __instance.Id;
-                bool shouldUnlock = BreachTracker.RecordBreach(doorId);
+
+                // Material -> category is resolved here (the patch has the Door instance) and
+                // passed down as a plain enum, keeping BreachTracker free of UnityEngine types.
+                // The tracker only uses it on the door's first kick; resolving on every kick is
+                // fine because kicks are user-paced, not per-frame.
+                var category = DoorMaterialResolver.Resolve(__instance, out var material);
+                bool shouldUnlock = BreachTracker.RecordBreach(doorId, category, material.ToString());
 
                 // Always control the result for locked doors - threshold is the gate
                 __result = shouldUnlock;

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-05
+
+### Added
+- Door material now decides how many kicks a breach takes: each door rolls its kick count once per raid from its material category — Flimsy (thin wood, glass, plastic: 2-4), Sturdy (thick wood, most doors: 4-6), or Reinforced (metal, concrete: 6-10)
+- `RandomizeBreaches` config toggle (default: on); turn it off to get the old fixed `BreachesToUnlock` behavior on every door
+- Min/max kick range settings per material category in the new `Randomization` config section
+- A door keeps its rolled kick count for the whole raid, even if the breach counter times out between kick sessions
+
+### Removed
+- Deleted the disabled server mod source (Halligan bar / flathead axe items) — ForcibleEntry is kick-only by design
+
+---
+
 ## [1.0.3] - 2026-03-06
 
 ### Changed

@@ -14,6 +14,13 @@ namespace Blackhorse311.ForcibleEntry
         internal static ManualLogSource Log;
         internal static ConfigEntry<int> BreachesToUnlock;
         internal static ConfigEntry<float> BreachTimeout;
+        internal static ConfigEntry<bool> RandomizeBreaches;
+        internal static ConfigEntry<int> FlimsyBreachesMin;
+        internal static ConfigEntry<int> FlimsyBreachesMax;
+        internal static ConfigEntry<int> SturdyBreachesMin;
+        internal static ConfigEntry<int> SturdyBreachesMax;
+        internal static ConfigEntry<int> ReinforcedBreachesMin;
+        internal static ConfigEntry<int> ReinforcedBreachesMax;
 
         private Harmony _harmony;
 
@@ -27,7 +34,7 @@ namespace Blackhorse311.ForcibleEntry
                 "BreachesToUnlock",
                 5,
                 new ConfigDescription(
-                    "Number of consecutive breach attempts required to force open a locked door",
+                    "Number of consecutive breach attempts required to force open a locked door (used when RandomizeBreaches is off)",
                     new AcceptableValueRange<int>(1, 20)
                 )
             );
@@ -40,6 +47,51 @@ namespace Blackhorse311.ForcibleEntry
                     "Time in seconds before breach counter resets (if you stop breaching)",
                     new AcceptableValueRange<float>(5f, 60f)
                 )
+            );
+
+            RandomizeBreaches = Config.Bind(
+                "Randomization",
+                "RandomizeBreaches",
+                true,
+                "Randomize how many kicks each door takes based on its material (thin wood/glass/plastic = Flimsy, metal/concrete = Reinforced, everything else = Sturdy). Each door rolls once per raid. When off, every door uses the fixed BreachesToUnlock value."
+            );
+
+            var kickRange = new AcceptableValueRange<int>(1, 20);
+            FlimsyBreachesMin = Config.Bind(
+                "Randomization",
+                "FlimsyBreachesMin",
+                2,
+                new ConfigDescription("Fewest kicks a Flimsy door (thin wood, glass, plastic) can take", kickRange)
+            );
+            FlimsyBreachesMax = Config.Bind(
+                "Randomization",
+                "FlimsyBreachesMax",
+                4,
+                new ConfigDescription("Most kicks a Flimsy door (thin wood, glass, plastic) can take", kickRange)
+            );
+            SturdyBreachesMin = Config.Bind(
+                "Randomization",
+                "SturdyBreachesMin",
+                4,
+                new ConfigDescription("Fewest kicks a Sturdy door (thick wood, unknown material) can take", kickRange)
+            );
+            SturdyBreachesMax = Config.Bind(
+                "Randomization",
+                "SturdyBreachesMax",
+                6,
+                new ConfigDescription("Most kicks a Sturdy door (thick wood, unknown material) can take", kickRange)
+            );
+            ReinforcedBreachesMin = Config.Bind(
+                "Randomization",
+                "ReinforcedBreachesMin",
+                6,
+                new ConfigDescription("Fewest kicks a Reinforced door (metal, concrete) can take", kickRange)
+            );
+            ReinforcedBreachesMax = Config.Bind(
+                "Randomization",
+                "ReinforcedBreachesMax",
+                10,
+                new ConfigDescription("Most kicks a Reinforced door (metal, concrete) can take", kickRange)
             );
 
             // Apply each patch class individually rather than PatchAll(), which is all-or-nothing:
@@ -63,7 +115,9 @@ namespace Blackhorse311.ForcibleEntry
             else
             {
                 Log.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded ({applied} patches applied).");
-                Log.LogInfo($"Breach {BreachesToUnlock.Value} times to force open any locked door!");
+                Log.LogInfo(RandomizeBreaches.Value
+                    ? "Kick any locked door open — how many kicks it takes depends on the door!"
+                    : $"Breach {BreachesToUnlock.Value} times to force open any locked door!");
             }
         }
 
@@ -110,6 +164,6 @@ namespace Blackhorse311.ForcibleEntry
         public const string PLUGIN_GUID = "com.blackhorse311.forcibleentry";
         public const string PLUGIN_NAME = "Blackhorse311-ForcibleEntry";
         // Keep in sync with <Version> in Blackhorse311.ForcibleEntry.csproj
-        public const string PLUGIN_VERSION = "1.0.3";
+        public const string PLUGIN_VERSION = "1.1.0";
     }
 }
