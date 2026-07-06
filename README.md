@@ -107,11 +107,11 @@ Config file location: `BepInEx/config/com.blackhorse311.forcibleentry.cfg`
 
 ```bash
 git clone https://github.com/Blackhorse311/Blackhorse311-ForcibleEntry.git
-cd Blackhorse311-ForcibleEntry/src/client
-dotnet build -c Release
+cd Blackhorse311-ForcibleEntry
+dotnet build -c Release -p:SptPath="<your SPT folder>" -p:NoDeploy=true
 ```
 
-Requires references to SPT's `Assembly-CSharp.dll`, `BepInEx.dll`, and `0Harmony.dll`. Update `HintPath` entries in the `.csproj` to match your local SPT installation.
+References to SPT's `Assembly-CSharp.dll`, `BepInEx.dll`, and `0Harmony.dll` are resolved from `SptPath` (or the `SPT_PATH` environment variable). Omit `-p:NoDeploy=true` to copy the built DLL into that SPT install's plugins folder automatically.
 
 ---
 
